@@ -1,42 +1,56 @@
 import 'package:flutter/material.dart';
 
-import 'like.dart';
 import 'profile.dart';
-import 'splash.dart';
+import 'request.dart';
+import '../entity/request.dart';
 
-class Home extends StatefulWidget {
-  const Home({super.key, required this.title});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<Home> createState() => _HomeState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomeState extends State<Home> {
+class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-  static const TextStyle optionStyle = TextStyle(
-    fontSize: 30,
-    fontWeight: FontWeight.bold,
+  // List<Request> displayedRequests = requests;    // jaja que bobo
+  List<Request> displayedRequests = List<Request>.from(requests);
+  String appBarTitle = "Todo";
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  static const Divider divider = Divider(
+    thickness: 1,
+    height: 1,
+    indent: 16,
+    endIndent: 0,
   );
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text('Index 0: Home', style: optionStyle),
-    Text('Index 1: Business', style: optionStyle),
-    Text('Index 2: School', style: optionStyle),
-  ];
+  void _setRequests(StateRequest state) {
+    setState(() {
+      displayedRequests.clear();
+      displayedRequests.addAll(requests.where((e) => e.state == state));
+    });
+  }
 
-  // void _onItemTapped(int index) {
-  //   setState(() {
-  //     _selectedIndex = index;
-  //   });
-  // }
+  void _setAll() {
+    setState(() {
+      displayedRequests.clear();
+      displayedRequests.addAll(requests);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(appBarTitle),
         leading: Builder(
           builder: (context) {
             return IconButton(
@@ -49,38 +63,111 @@ class _HomeState extends State<Home> {
         ),
       ),
 
-      body: Center(child: _widgetOptions[_selectedIndex]),
+      body: Padding(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        child: ListView.builder(
+          scrollDirection: Axis.vertical,
+          padding: EdgeInsets.symmetric(vertical: 8),
+          itemCount: displayedRequests.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: EdgeInsets.zero,
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: AssetImage("assets/img/foto_perfil.jpg"),
+                  radius: 30,
+                ),
+                title: Text(displayedRequests[index].userName),
+                subtitle: Text(
+                  displayedRequests[index].action,
+                  maxLines: 2,
+                  style: TextStyle(color: Colors.white60, fontSize: 13)
+                ),
+                trailing: Text(displayedRequests[index].sState ?? "Sin estado"),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RequestPage(request: displayedRequests[index]))
+                  );
+                }
+              )
+            );
+          },
+        ),
+      ),
+
       drawer: Drawer(
-        // Add a ListView to the drawer. This ensures the user can scroll
-        // through the options in the drawer if there isn't enough vertical
-        // space to fit everything.
+        backgroundColor: Color(0xFF2f2f2f),
         child: ListView(
-          // Important: Remove any padding from the ListView.
           padding: EdgeInsets.zero,
-          children: [
+          children: <Widget>[
             const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text('Drawer Header'),
+              decoration: BoxDecoration(color: Color(0xFF2b2b2b)),
+              child: Text('RemoteAdmin', style: TextStyle(color: Colors.white)),
             ),
+
             ListTile(
-              title: const Text('Profile'),
+              leading: Icon(Icons.list_alt, color: Colors.white),
+              title: const Text("Todo"),
               selected: _selectedIndex == 0,
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const Profile()));
+                _onItemTapped(0);
+                _setAll();
+                appBarTitle = "Todo";
+                Navigator.pop(context);
               },
             ),
             ListTile(
-              title: const Text('Like'),
-              selected: _selectedIndex == 1,
+              leading: Icon(Icons.hourglass_empty, color: Colors.white),
+              title: const Text("Solicitudes pendientes"),
+              selected: _selectedIndex == 4,
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const Like()));
+                _onItemTapped(4);
+                _setRequests(StateRequest.pending);
+                appBarTitle = "Solicitudes pendientes";
+                Navigator.pop(context);
               },
             ),
             ListTile(
-              title: const Text('Splash'),
+              leading: Icon(Icons.check_circle_outline, color: Colors.white),
+              title: const Text("Solicitudes aprobadas"),
               selected: _selectedIndex == 2,
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => const Splash()));
+                _onItemTapped(2);
+                _setRequests(StateRequest.approved);
+                appBarTitle = "Solicitudes aprobadas";
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.cancel_outlined, color: Colors.white),
+              title: const Text("Solicitudes negadas"),
+              selected: _selectedIndex == 3,
+              onTap: () {
+                _onItemTapped(3);
+                _setRequests(StateRequest.denied);
+                appBarTitle = "Solicitudes negadas";
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.flag, color: Colors.white),
+              title: const Text("Solicitudes ejecutadas"),
+              selected: _selectedIndex == 5,
+              onTap: () {
+                _onItemTapped(5);
+                _setRequests(StateRequest.executed);
+                appBarTitle = "Solicitudes ejecutadas";
+                Navigator.pop(context);
+              },
+            ),
+
+            divider,
+            ListTile(
+              leading: Icon(Icons.account_circle_sharp, color: Colors.white),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
               },
             ),
           ],
