@@ -61,6 +61,7 @@ flutter:
   assets:
     - assets/img/foto_perfil.jpg
     - assets/img/remoteAdmin.png
+    - assets/data/questions.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
