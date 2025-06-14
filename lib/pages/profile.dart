@@ -1,4 +1,4 @@
-import '../entity/user.dart';
+import '../data/models/user.dart';
 
 import 'package:flutter/material.dart';
 

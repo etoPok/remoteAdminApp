@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'profile.dart';
 import 'request.dart';
-import '../entity/request.dart';
+import '../data/models/request.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});

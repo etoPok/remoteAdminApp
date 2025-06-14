@@ -1,4 +1,4 @@
-package com.example.remote_admin_app
+package dev.etoPok.remoteadmin
 
 import io.flutter.embedding.android.FlutterActivity
 
