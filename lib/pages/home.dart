@@ -171,7 +171,7 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: Icon(Icons.settings, color: Colors.white),
-              title: const Text('Preferencias'),
+              title: const Text('Configuración'),
               onTap: () {
                 // Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
               },

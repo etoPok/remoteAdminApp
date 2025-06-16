@@ -1,4 +1,4 @@
-import 'screen/splash.dart';
+import 'pages/splash.dart';
 
 import 'package:flutter/material.dart';
 
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
           textColor: Colors.white,
           selectedColor: Colors.white,
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           color: primaryColor,
         ),
 
