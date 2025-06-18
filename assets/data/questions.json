@@ -1,0 +1,26 @@
+[
+    {
+        "id": 4,
+        "pregunta": "Nombre",
+        "respuesta": "",
+        "len": 20
+    },
+    {
+        "id": 1,
+        "pregunta": "¿Qué te ha parecido la aplicación?",
+        "respuesta": "",
+        "len": 100
+    },
+    {
+        "id": 2,
+        "pregunta": "¿Qué mejoras le harías?",
+        "respuesta": "",
+        "len": 100
+    },
+    {
+        "id": 3,
+        "pregunta": "¿Tercer pregunta?",
+        "respuesta": "",
+        "len": 100
+    }
+]

@@ -55,7 +55,7 @@ class Request {
 final List<Request> requests = <Request>[
   Request(
     userName: "etoPok",
-    message: "Necesito instalar una versión el motor de Unity para desarrollar mi videojuego",
+    message: "Necesito instalar una versión del motor Unity para desarrollar mi videojuego",
     action: "Instalación de motor Unity",
     date: DateTime(2025, 5, 14, 20, 30, 45, 0, 0),
     state: StateRequest.executed

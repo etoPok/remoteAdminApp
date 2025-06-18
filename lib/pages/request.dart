@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 
 
 class RequestPage extends StatefulWidget {
-  RequestPage({super.key, required Request request}) :
-    request = request;
+  const RequestPage({super.key, required this.request});
 
   final Request request;
 

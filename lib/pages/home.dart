@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'profile.dart';
 import 'request.dart';
 import '../data/models/request.dart';
+import 'about.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -32,20 +33,18 @@ class _HomePageState extends State<HomePage> {
     endIndent: 0,
   );
 
-  void _setRequests(StateRequest state) {
+  /// Define por estado las solicitudes a mostrar. Si no especifica un estado
+  /// mostrara todas las solicitudes.
+  void _setRequests(StateRequest? state) {
     setState(() {
       displayedRequests.clear();
-      displayedRequests.addAll(requests.where((e) => e.state == state));
+      if (state == null) {
+        displayedRequests.addAll(requests);
+      } else {
+        displayedRequests.addAll(requests.where((e) => e.state == state));
+      }
     });
   }
-
-  void _setAll() {
-    setState(() {
-      displayedRequests.clear();
-      displayedRequests.addAll(requests);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,7 +111,7 @@ class _HomePageState extends State<HomePage> {
               selected: _selectedIndex == 0,
               onTap: () {
                 _onItemTapped(0);
-                _setAll();
+                _setRequests(null);
                 appBarTitle = "Todo";
                 Navigator.pop(context);
               },
@@ -168,6 +167,20 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Profile'),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.settings, color: Colors.white),
+              title: const Text('Configuración'),
+              onTap: () {
+                // Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.info_outline, color: Colors.white),
+              title: const Text('Acerca'),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage()));
               },
             ),
           ],
