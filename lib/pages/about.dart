@@ -48,8 +48,8 @@ class _QuestionPage extends StatefulWidget {
 }
 
 class _QuestionPageState extends State<_QuestionPage> {
-  final List<dynamic> _questions = [];
-  final Map<int, TextEditingController> _controllers = {};
+  final Map<String, dynamic> _questions = {};
+  final List<String> _questionEntries = [];
 
   @override
   void initState() {
@@ -59,34 +59,29 @@ class _QuestionPageState extends State<_QuestionPage> {
 
   @override
   void dispose() {
-    for (var controller in _controllers.values) { controller.dispose(); }
     super.dispose();
   }
 
   Future<void> _loadQuestions() async {
     String content = await rootBundle.loadString("assets/data/questions.json");
-    setState(() {
-      _questions.addAll(jsonDecode(content));
+    Map<String, dynamic> data = jsonDecode(content);
 
-      // Controladores para TextField
-      for (var q in _questions) {
-        _controllers[q["id"]] = TextEditingController();
-      }
+    setState(() {
+      _questions.addAll(data);
+      for (var entry in _questions.entries) { _questionEntries.add(entry.key); }
     });
   }
 
-  void _saveAnswers() {
-    for (var question in _questions) {
-      // proporcionar valor por defecto si no hay controlador
-      question["respuesta"] = _controllers[question["id"]]?.text ?? "";
-    }
-  }
-
   String _getStringAnswers() {
-    final buffer = StringBuffer();
-    for (int i=0; i < _questions.length; i++) {
-      buffer.writeln("${(i+1)}. ${_questions[i]["pregunta"]}");
-      buffer.writeln(_questions[i]["respuesta"]);
+    StringBuffer buffer = StringBuffer();
+    int i = 1;
+    for (var entry in _questionEntries) {
+      buffer.writeln(entry);
+      for (var q in _questions[entry]) {
+        buffer.writeln("$i. ${q["titulo"]}");
+        buffer.writeln(q["valor"]);
+        i++;
+      }
       buffer.writeln();
     }
 
@@ -96,12 +91,11 @@ class _QuestionPageState extends State<_QuestionPage> {
   Future<void> _send() async {
     if (_questions.isEmpty) return;
 
-    _saveAnswers();
     final answers = _getStringAnswers();
 
     final Email email = Email(
       body: answers,
-      subject: "Respuestas de ${_questions[0]["respuesta"]}",
+      subject: "Retroalimentación",
       recipients: ["declivtosira@gmail.com"],
       attachmentPaths: [],
       isHTML: false
@@ -125,6 +119,17 @@ class _QuestionPageState extends State<_QuestionPage> {
     );
   }
 
+  TextButton _circleButtonWithAction(String child, bool selected, void Function() action) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        shape: CircleBorder(),
+        backgroundColor: selected ? Colors.blueGrey.shade900 : Colors.transparent
+      ),
+      onPressed: () { action(); },
+      child: Text(child)
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,21 +139,68 @@ class _QuestionPageState extends State<_QuestionPage> {
 
       body: ListView.builder(
         padding: EdgeInsets.all(8),
-        itemCount: _questions.length,
+        itemCount: _questionEntries.length,
         itemBuilder: (_, val) {
-          final id = _questions[val]["id"];
-          final question = _questions[val]["pregunta"];
-          final len = _questions[val]["len"];
+          final List<Widget> widgetsForCard = [];
 
-          return Card(
-            margin: EdgeInsets.all(8),
-            child: ListTile(
-              title: Text(question),
-              subtitle: TextField(
-                controller: _controllers[id],
-                maxLength: len,
+          for (var q in _questions[_questionEntries[val]]) {
+            widgetsForCard.add(
+              ListTile(
+                title: Text(q["titulo"]),
+                subtitle: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    _circleButtonWithAction("1", q["valor"] == 1, () {
+                      q["valor"] = 1;
+                      setState(() {});
+                    }),
+                    _circleButtonWithAction("2", q["valor"] == 2, () {
+                      q["valor"] = 2;
+                      setState(() {});
+                    }),
+                    _circleButtonWithAction("3", q["valor"] == 3, () {
+                      q["valor"] = 3;
+                      setState(() {});
+                    }),
+                    _circleButtonWithAction("4", q["valor"] == 4, () {
+                      q["valor"] = 4;
+                      setState(() {});
+                    }),
+                    _circleButtonWithAction("5", q["valor"] == 5, () {
+                      q["valor"] = 5;
+                      setState(() {});
+                    })
+                  ]
+                )
               )
-            )
+            );
+            widgetsForCard.add(Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text(q["max"])
+              )
+            ));
+            widgetsForCard.add(Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text(q["min"])
+              )
+            ));
+            widgetsForCard.add(
+              _questions[_questionEntries[val]].last["id"] == q["id"] ?
+                SizedBox(height: 8) : Divider()
+            );
+          }
+
+          return Column(
+            children: <Widget>[
+              ListTile(title: Text(_questionEntries[val])),
+              Card(
+                child: Column(children: widgetsForCard)
+              )
+            ]
           );
         }
       ),
