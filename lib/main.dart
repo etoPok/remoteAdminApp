@@ -1,15 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 import 'pages/splash.dart';
 import 'theme/theme.dart';
 import 'theme/util.dart';
+import 'data/services/local_notifications_plugin.dart';
 
-void main() => runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final timezone = await FlutterTimezone.getLocalTimezone();
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation(timezone));
+
+  AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('remote_admin');
+
+  InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings
+  );
+
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     // final brightness = View.of(context).platformDispatcher.platformBrightness;

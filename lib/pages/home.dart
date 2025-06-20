@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import 'profile.dart';
 import 'request.dart';
 import '../data/models/request.dart';
 import 'about.dart';
+import '../data/services/local_notifications_plugin.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -15,10 +20,69 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
-  // List<Request> displayedRequests = requests;    // jaja que bobo
   List<Request> displayedRequests = List<Request>.from(requests);
   String appBarTitle = "Todo";
+  int _selectedIndex = 0;
+
+  bool _notificationsEnabled = false;
+  bool _canSheduleNotifications = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotificationsPermissions().then((_) {
+      if (!_canSheduleNotifications) return;
+      _sheduleNotification();
+    });
+  }
+
+  Future<void> _initializeNotificationsPermissions() async {
+    if (!Platform.isAndroid) return;
+
+    // no deberia ser nulo si se esta en la plataforma esperada
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+      flutterLocalNotificationsPlugin.
+      resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    bool notificationsEnabled = false;
+
+    notificationsEnabled = await androidImplementation?.
+      areNotificationsEnabled() ?? false;   // comprobar permisos
+    if (!notificationsEnabled) {
+      notificationsEnabled = await androidImplementation?.
+        requestNotificationsPermission() ?? false;    // solicitar permisos
+    }
+
+    setState(() { _notificationsEnabled = notificationsEnabled; });
+    if (!_notificationsEnabled) return;   // no continuar si no se puede mostrar notificaciones
+
+    bool canSheduleNotifications = await androidImplementation?.
+      requestExactAlarmsPermission() ?? false;    // solicitar permisos para programar notificaciones
+    setState(() { _canSheduleNotifications = canSheduleNotifications; });
+  }
+
+  Future<void> _sheduleNotification() async {
+    final newRequest = Request(
+      userName: "juanAdmin",
+      message: "Necesito reiniciar el servicio de base de datos en el servidor de producción para aplicar un parche de seguridad crítico.",
+      action: "Reinicio de servicio",
+      date: tz.TZDateTime.now(tz.local),
+      state: StateRequest.pending
+    );
+    requests.add(newRequest);
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id++,
+      "Nueva solicitud de permisos de ${newRequest.userName}",
+      newRequest.action,
+      tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'your channel id', 'your channel name',
+          channelDescription: 'your channel description')
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle
+    );
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -45,6 +109,7 @@ class _HomePageState extends State<HomePage> {
       }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
