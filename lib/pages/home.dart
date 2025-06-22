@@ -9,6 +9,7 @@ import 'request.dart';
 import '../data/models/request.dart';
 import 'about.dart';
 import '../data/services/local_notifications_plugin.dart';
+import '../data/services/database_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -20,9 +21,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Request> displayedRequests = List<Request>.from(requests);
+  List<Request> displayedRequests = [];
   String appBarTitle = "Todo";
   int _selectedIndex = 0;
+
+  DatabaseHelper dbHelper = DatabaseHelper();
 
   bool _notificationsEnabled = false;
   bool _canSheduleNotifications = false;
@@ -30,9 +33,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _initializeNotificationsPermissions().then((_) {
-      if (!_canSheduleNotifications) return;
-      _sheduleNotification();
+    _initializeNotificationsPermissions().then((_) async {
+      await _loadDatabase();
+      if (_canSheduleNotifications) {
+        await _sheduleNotification();
+      }
     });
   }
 
@@ -61,12 +66,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _sheduleNotification() async {
-    final newRequest = Request(
-      userName: "juanAdmin",
-      message: "Necesito reiniciar el servicio de base de datos en el servidor de producción para aplicar un parche de seguridad crítico.",
-      action: "Reinicio de servicio",
-      date: tz.TZDateTime.now(tz.local),
-      state: StateRequest.pending
+    final newRequest = await dbHelper.insertRequest(
+      Request(
+        userName: "juanAdmin",
+        message: "Necesito reiniciar el servicio de base de datos en el servidor de producción para aplicar un parche de seguridad crítico.",
+        action: "Reinicio de servicio",
+        date: tz.TZDateTime.now(tz.local),
+        state: StateRequest.pending
+      )
     );
     requests.add(newRequest);
 
@@ -82,6 +89,36 @@ class _HomePageState extends State<HomePage> {
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle
     );
+  }
+
+  Future<void> _loadDatabase() async {
+    // se agregan las solicitudes en la database para crear, ver, editar
+    // y eliminar desde la database.
+    await dbHelper.deleteRequest(null);
+    final copy = List<Request>.from(requests);
+    final List<Request> requestsWithId = [];
+    for (var r in copy) {
+      Request rWithId = await dbHelper.insertRequest(r);
+      requestsWithId.add(rWithId);
+    }
+    setState(() {
+      requests.clear();
+      requests.addAll(requestsWithId);
+    });
+
+    appBarTitle = "Todo";
+    _setRequests(null);
+  }
+
+  Future<void> _updateRequest() async {
+    requests.clear();
+    final rs = await dbHelper.getRequests();
+    for (var map in rs) {
+      requests.add(Request.fromMap(map));
+    }
+
+    appBarTitle = "Todo";
+    _setRequests(null);
   }
 
   void _onItemTapped(int index) {
@@ -127,36 +164,50 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
-      body: Padding(
-        padding: EdgeInsets.symmetric(vertical: 16),
-        child: ListView.builder(
-          scrollDirection: Axis.vertical,
-          padding: EdgeInsets.symmetric(vertical: 8),
-          itemCount: displayedRequests.length,
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: EdgeInsets.zero,
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: AssetImage("assets/img/foto_perfil.jpg"),
-                  radius: 30,
-                ),
-                title: Text(displayedRequests[index].userName),
-                subtitle: Text(
-                  displayedRequests[index].action,
-                  maxLines: 2,
-                  style: TextStyle(color: Colors.white60, fontSize: 13)
-                ),
-                trailing: Text(displayedRequests[index].sState ?? "Sin estado"),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RequestPage(request: displayedRequests[index]))
-                  );
-                }
-              )
-            );
-          },
+      body: RefreshIndicator(
+        onRefresh: _updateRequest,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: ListView.builder(
+            scrollDirection: Axis.vertical,
+            padding: EdgeInsets.symmetric(vertical: 8),
+            itemCount: displayedRequests.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.zero,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: AssetImage("assets/img/foto_perfil.jpg"),
+                    radius: 30,
+                  ),
+                  title: Text(displayedRequests[index].userName),
+                  subtitle: Text(
+                    displayedRequests[index].action,
+                    maxLines: 2,
+                    style: TextStyle(color: Colors.white60, fontSize: 13)
+                  ),
+                  trailing: Text(displayedRequests[index].sState ?? "Sin estado"),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RequestPage(request: displayedRequests[index]))
+                    ).then((map) async {
+                      if (map["delete"]) {
+                        await dbHelper.deleteRequest(displayedRequests[index].id);
+                        _updateRequest();
+                      }
+
+                      final Request? newRequest = map["newRequest"];
+                      if (newRequest != null) {
+                        await dbHelper.updateRequest(displayedRequests[index].id, newRequest);
+                        _updateRequest();
+                      }
+                    });
+                  }
+                )
+              );
+            },
+          ),
         ),
       ),
 

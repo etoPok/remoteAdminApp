@@ -3,14 +3,19 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'pages/splash.dart';
 import 'theme/theme.dart';
 import 'theme/util.dart';
 import 'data/services/local_notifications_plugin.dart';
+import 'data/services/database_helper.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await DatabaseHelper().initializeDatabase();
+  await initializeDateFormatting('es_ES', null);
 
   final timezone = await FlutterTimezone.getLocalTimezone();
   tz.initializeTimeZones();
