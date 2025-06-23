@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/date_symbol_data_file.dart';
+import 'package:provider/provider.dart';
+import 'package:remote_admin_app/data/services/preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:intl/intl.dart';
 
@@ -62,6 +63,11 @@ class _RequestPageState extends State<RequestPage> {
 
   @override
   Widget build(BuildContext context) {
+    // return Scaffold(
+    //   appBar: AppBar(),
+    // );
+    final prefs = Provider.of<PreferencesProvider>(context);
+
     void deleteRequest() {
       Navigator.pop(context, {"delete": true, "newRequest": null});
     }
@@ -256,32 +262,36 @@ class _RequestPageState extends State<RequestPage> {
                         child: IconButton(
                           icon: Icon(Icons.delete_outline),
                           onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext dialogContext) {
-                                return AlertDialog(
-                                  title: Text("¿Eliminar solicitud?"),
-                                    content: Text(
-                                      "Eliminar una solicitud pendiente se negará inmediatamente. "
-                                      "Obtendrá actualizaciones de solicitudes que ya haya procesado aunque se eliminen.",
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        child: Text("Cancelar"),
-                                        onPressed: () {
-                                          Navigator.of(dialogContext).pop();
-                                        },
+                            if (prefs.confirmBeforeDelete) {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext dialogContext) {
+                                  return AlertDialog(
+                                    title: Text("¿Eliminar solicitud?"),
+                                      content: Text(
+                                        "Eliminar una solicitud pendiente se negará inmediatamente. "
+                                        "Obtendrá actualizaciones de solicitudes que haya procesado aunque se eliminen.",
                                       ),
-                                      TextButton(
-                                        child: Text("Eliminar"),
-                                        onPressed: () {
-                                          Navigator.of(dialogContext).pop();
-                                          deleteRequest();
-                                        },
-                                      ),
-                                    ]
-                                );
-                            });
+                                      actions: [
+                                        TextButton(
+                                          child: Text("Cancelar"),
+                                          onPressed: () {
+                                            Navigator.of(dialogContext).pop();
+                                          },
+                                        ),
+                                        TextButton(
+                                          child: Text("Eliminar"),
+                                          onPressed: () {
+                                            Navigator.of(dialogContext).pop();
+                                            deleteRequest();
+                                          },
+                                        ),
+                                      ]
+                                  );
+                              });
+                            } else {
+                              deleteRequest();
+                            }
                           },
                         ),
                       )

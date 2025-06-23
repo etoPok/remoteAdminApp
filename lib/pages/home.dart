@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:remote_admin_app/pages/settings.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import 'profile.dart';
@@ -287,9 +288,9 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: Icon(Icons.settings, color: Colors.white),
-              title: const Text('Configuración'),
+              title: const Text('Preferencias'),
               onTap: () {
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingPage()));
               },
             ),
             ListTile(

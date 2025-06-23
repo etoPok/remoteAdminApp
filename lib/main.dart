@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:provider/provider.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:intl/date_symbol_data_local.dart';
@@ -10,11 +11,14 @@ import 'theme/theme.dart';
 import 'theme/util.dart';
 import 'data/services/local_notifications_plugin.dart';
 import 'data/services/database_helper.dart';
+import 'data/services/preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await DatabaseHelper().initializeDatabase();
+  DatabaseHelper dbHelper = DatabaseHelper();
+  await dbHelper.initializeDatabase();
+
   await initializeDateFormatting('es_ES', null);
 
   final timezone = await FlutterTimezone.getLocalTimezone();
@@ -32,7 +36,12 @@ Future<void> main() async {
     initializationSettings
   );
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => PreferencesProvider(),
+      child: const MyApp()
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -40,14 +49,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final brightness = View.of(context).platformDispatcher.platformBrightness;
-    TextTheme textTheme = createTextTheme(context, "Abel", "Abel");
-    MaterialTheme theme = MaterialTheme(textTheme);
+    return Consumer<PreferencesProvider>(
+      builder: (context, prefs, _) {
+        TextTheme textTheme = createTextTheme(context, "Abel", "Abel");
+        MaterialTheme theme = MaterialTheme(textTheme);
 
-    return MaterialApp(
-      title: 'RemoteAdmin',
-      theme: theme.dark(),
-      home: const SplashPage(),
+        return MaterialApp(
+          theme: theme.light(),
+          darkTheme: theme.dark(),
+          themeMode: prefs.darkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const SplashPage(),
+        );
+      },
     );
   }
 }

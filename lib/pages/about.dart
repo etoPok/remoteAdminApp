@@ -16,26 +16,174 @@ class _AboutPageState extends State<AboutPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Acerca")
+        title: const Text("Acerca de"),
       ),
 
-      body: ListView(
-        padding: EdgeInsets.all(8),
-        children: <Widget>[
-          const Text("Puede colaborar al desarrollo de esta aplicación dando a conocer su opinión"),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => _QuestionPage()
-                )
-              );
-            },
-            child: const Text("Colaborar")
-          )
-        ]
-      )
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // Sección de Información de la Aplicación
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.info_outline,
+                          size: 50,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Text(
+                          "RemoteAdmin",
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          "Versión: 1.0.0",
+                          style: Theme.of(context).textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Esta aplicación está diseñada para gestionar solicitudes de tareas que necesiten escalar privilegios en un sistema remoto.",
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(fontSize: 15),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Sección del Creador
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.person_outline,
+                          size: 50,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: Text(
+                          "Desarrollado por etoPok",
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.center,
+                        child: const Text(
+                          "¡Gracias por usar RemoteAdmin!",
+                          textAlign: TextAlign.justify,
+                          style: TextStyle(fontSize: 15),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Sección de Colaboración/Opinión
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.feedback_outlined,
+                          size: 50,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.center,
+                        child: const Text(
+                          "¡Tu opinión es importante!",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Puede colaborar al desarrollo de esta aplicación dando a conocer su opinión, sugerencias o reportando cualquier problema que encuentre. Su feedback ayuda a mejorar.",
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => _QuestionPage(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.send),
+                          label: const Text(
+                            "Enviar mi opinión",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -144,41 +292,49 @@ class _QuestionPageState extends State<_QuestionPage> {
           final List<Widget> widgetsForCard = [];
 
           for (var q in _questions[_questionEntries[val]]) {
-            widgetsForCard.add(
-              ListTile(
-                title: Text(q["titulo"]),
-                subtitle: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+            widgetsForCard.add(Padding(
+              padding: EdgeInsets.all(8),
+              child: Text(q["titulo"], style: TextStyle(fontSize: 16))
+            ));
+            widgetsForCard.add(Align(
+              alignment: Alignment.center,
+              child: SizedBox(
+                height: 50,
+                width: 330,
+                child: Row(
                   children: <Widget>[
-                    _circleButtonWithAction("1", q["valor"] == 1, () {
-                      q["valor"] = 1;
-                      setState(() {});
-                    }),
-                    _circleButtonWithAction("2", q["valor"] == 2, () {
-                      q["valor"] = 2;
-                      setState(() {});
-                    }),
-                    _circleButtonWithAction("3", q["valor"] == 3, () {
-                      q["valor"] = 3;
-                      setState(() {});
-                    }),
-                    _circleButtonWithAction("4", q["valor"] == 4, () {
-                      q["valor"] = 4;
-                      setState(() {});
-                    }),
-                    _circleButtonWithAction("5", q["valor"] == 5, () {
-                      q["valor"] = 5;
-                      setState(() {});
-                    })
+                    Expanded(
+                      child: _circleButtonWithAction("1", q["valor"] == 1, () {
+                        q["valor"] = 1;
+                        setState(() {});
+                      }
+                    )),
+                    Expanded(
+                      child: _circleButtonWithAction("2", q["valor"] == 2, () {
+                        q["valor"] = 2;
+                        setState(() {});
+                      }
+                    )),
+                    Expanded(
+                      child: _circleButtonWithAction("3", q["valor"] == 3, () {
+                        q["valor"] = 3;
+                        setState(() {});
+                      }
+                    )),
+                    Expanded(
+                      child: _circleButtonWithAction("4", q["valor"] == 4, () {
+                        q["valor"] = 4;
+                        setState(() {});
+                      }
+                    )),
+                    Expanded(
+                      child: _circleButtonWithAction("5", q["valor"] == 5, () {
+                        q["valor"] = 5;
+                        setState(() {});
+                      }
+                    )),
                   ]
                 )
-              )
-            );
-            widgetsForCard.add(Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text(q["max"])
               )
             ));
             widgetsForCard.add(Align(
@@ -186,6 +342,13 @@ class _QuestionPageState extends State<_QuestionPage> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Text(q["min"])
+              )
+            ));
+            widgetsForCard.add(Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Text(q["max"])
               )
             ));
             widgetsForCard.add(
