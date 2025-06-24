@@ -1,4 +1,10 @@
 {
+    "Usuario": [
+        {
+            "titulo": "Nombre",
+            "valor": ""
+        }
+    ],
     "Usabilidad": [
         {
             "id": 1,

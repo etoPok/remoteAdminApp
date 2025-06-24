@@ -291,78 +291,94 @@ class _QuestionPageState extends State<_QuestionPage> {
         itemBuilder: (_, val) {
           final List<Widget> widgetsForCard = [];
 
-          for (var q in _questions[_questionEntries[val]]) {
-            widgetsForCard.add(Padding(
-              padding: EdgeInsets.all(8),
-              child: Text(q["titulo"], style: TextStyle(fontSize: 16))
-            ));
-            widgetsForCard.add(Align(
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: 50,
-                width: 330,
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: _circleButtonWithAction("1", q["valor"] == 1, () {
-                        q["valor"] = 1;
-                        setState(() {});
-                      }
-                    )),
-                    Expanded(
-                      child: _circleButtonWithAction("2", q["valor"] == 2, () {
-                        q["valor"] = 2;
-                        setState(() {});
-                      }
-                    )),
-                    Expanded(
-                      child: _circleButtonWithAction("3", q["valor"] == 3, () {
-                        q["valor"] = 3;
-                        setState(() {});
-                      }
-                    )),
-                    Expanded(
-                      child: _circleButtonWithAction("4", q["valor"] == 4, () {
-                        q["valor"] = 4;
-                        setState(() {});
-                      }
-                    )),
-                    Expanded(
-                      child: _circleButtonWithAction("5", q["valor"] == 5, () {
-                        q["valor"] = 5;
-                        setState(() {});
-                      }
-                    )),
-                  ]
+          if (_questionEntries[val] != "Usuario") {
+            for (var q in _questions[_questionEntries[val]]) {
+              widgetsForCard.add(Padding(
+                padding: EdgeInsets.all(8),
+                child: Text(q["titulo"], style: TextStyle(fontSize: 16))
+              ));
+              widgetsForCard.add(Align(
+                alignment: Alignment.center,
+                child: SizedBox(
+                  height: 50,
+                  width: 330,
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: _circleButtonWithAction("1", q["valor"] == 1, () {
+                          q["valor"] = 1;
+                          setState(() {});
+                        }
+                      )),
+                      Expanded(
+                        child: _circleButtonWithAction("2", q["valor"] == 2, () {
+                          q["valor"] = 2;
+                          setState(() {});
+                        }
+                      )),
+                      Expanded(
+                        child: _circleButtonWithAction("3", q["valor"] == 3, () {
+                          q["valor"] = 3;
+                          setState(() {});
+                        }
+                      )),
+                      Expanded(
+                        child: _circleButtonWithAction("4", q["valor"] == 4, () {
+                          q["valor"] = 4;
+                          setState(() {});
+                        }
+                      )),
+                      Expanded(
+                        child: _circleButtonWithAction("5", q["valor"] == 5, () {
+                          q["valor"] = 5;
+                          setState(() {});
+                        }
+                      )),
+                    ]
+                  )
                 )
-              )
-            ));
-            widgetsForCard.add(Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text(q["min"])
-              )
-            ));
-            widgetsForCard.add(Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Text(q["max"])
-              )
-            ));
-            widgetsForCard.add(
-              _questions[_questionEntries[val]].last["id"] == q["id"] ?
-                SizedBox(height: 8) : Divider()
-            );
+              ));
+              widgetsForCard.add(Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(q["min"])
+                )
+              ));
+              widgetsForCard.add(Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(q["max"])
+                )
+              ));
+              widgetsForCard.add(
+                _questions[_questionEntries[val]].last["id"] == q["id"] ?
+                  SizedBox(height: 8) : Divider()
+              );
+            }
           }
 
           return Column(
             children: <Widget>[
-              ListTile(title: Text(_questionEntries[val])),
-              Card(
-                child: Column(children: widgetsForCard)
-              )
+              if (_questionEntries[val] == "Usuario") ...[
+                Card(
+                  child: ListTile(
+                    title: const Text("Nombre", style: TextStyle(fontSize: 18)),
+                    subtitle: TextField(
+                      onSubmitted: (value) {
+                        _questions[_questionEntries[val]].first["valor"] = value;
+                      },
+                      maxLength: 20,
+                    )
+                  )
+                ),
+              ] else ...[
+                ListTile(title: Text(_questionEntries[val], style: TextStyle(fontSize: 22))),
+                Card(
+                  child: Column(children: widgetsForCard)
+                )
+              ]
             ]
           );
         }
