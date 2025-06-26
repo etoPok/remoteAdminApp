@@ -49,7 +49,6 @@ class DatabaseHelper {
   }
 
   Future<Request> insertRequest(Request request) async {
-    // print("LLAMADA A INSERT");
     final db = await database;
     int newId = await db.insert(
       'request',
@@ -74,17 +73,21 @@ class DatabaseHelper {
     return await db.query("request");
   }
 
-  Future<void> deleteRequest(int? id) async {
+  Future<bool> deleteRequest(int? id) async {
     final db = await database;
+    int rowsAffected = 0;
+
     if (id == null) {
-      await db.delete("request");
-    } else {
-      await db.delete(
-        "request",
-        where: 'id = ?',
-        whereArgs: [id]
-      );
+      rowsAffected = await db.delete("request");
+      return rowsAffected > 0;
     }
+
+    rowsAffected = await db.delete(
+      "request",
+      where: 'id = ?',
+      whereArgs: [id]
+    );
+    return rowsAffected > 0;
   }
 
   Future<Map<String, dynamic>> getRequest(int id) async {
@@ -110,13 +113,13 @@ class DatabaseHelper {
     }
 
     final db = await database;
-    if (updates.isNotEmpty) {
-      await db.update(
-        'request',
-        updates,
-        where: 'id = ?',
-        whereArgs: [id],
-      );
-    }
+    if (updates.isEmpty) return;
+
+    await db.update(
+      'request',
+      updates,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }

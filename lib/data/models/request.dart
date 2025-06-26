@@ -1,23 +1,20 @@
 enum StateRequest {
-  executed,
-  approved,
-  pending,
-  denied
-}
-
-StateRequest? stringToStateRequest(String state) {
+  executed("Ejecutado"),
+  approved("Aprobado"),
+  pending("Pendiente"),
+  denied("Denegado");
+  final String legibleName;
+  const StateRequest(this.legibleName);
+  static StateRequest? stringToStateRequest(String state) {
     switch (state) {
-      case "Aprobada":
-        return StateRequest.approved;
-      case "Denegada":
-        return StateRequest.denied;
-      case "Ejecutada":
-        return StateRequest.executed;
-      case "Pendiente":
-        return StateRequest.pending;
+      case "Ejecutado": return StateRequest.executed;
+      case "Aprobado": return StateRequest.approved;
+      case "Pendiente": return StateRequest.pending;
+      case "Denegado": return StateRequest.denied;
     }
     return null;
   }
+}
 
 class Request {
   final int _id;
@@ -51,18 +48,6 @@ class Request {
   int get id => _id;
   String get userName => _userName;
   String get action => _action;
-  String? get sState {
-    switch (_state) {
-      case StateRequest.approved:
-        return "Aprobada";
-      case StateRequest.denied:
-        return "Denegada";
-      case StateRequest.executed:
-        return "Ejecutada";
-      case StateRequest.pending:
-        return "Pendiente";
-    }
-  }
   StateRequest get state => _state;
   String get message => _message;
   DateTime get date => _date;
@@ -72,7 +57,7 @@ class Request {
 
   Map<String, Object?> toMap() {
     return {"userName": _userName, "message": _message, "action": _action,
-      "date": _date.toIso8601String(), "state": sState, "responseMessage": _responseMessage ?? "",
+      "date": _date.toIso8601String(), "state": _state.legibleName, "responseMessage": _responseMessage ?? "",
       "responseDate": _responseDate?.toIso8601String() ?? ""};
   }
 
@@ -95,14 +80,13 @@ class Request {
       message: map["message"] as String,
       action: map["action"] as String,
       date: DateTime.parse(map["date"] as String),
-      state: stringToStateRequest(map["state"] as String) ?? StateRequest.pending,
+      state: StateRequest.stringToStateRequest(map["state"] as String) ?? StateRequest.pending,
       responseMessage: map["responseMessage"] as String,
       responseDate: parseResponseDate(map["responseDate"] as String?)
     );
   }
 
   Request copyWith({
-    int? id,
     String? userName,
     String? message,
     String? action,
@@ -112,6 +96,7 @@ class Request {
     DateTime? responseDate
   }) {
     return Request(
+      id: _id,
       userName: userName ?? _userName,
       message: message ?? _message,
       action: action ?? _action,

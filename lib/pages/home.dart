@@ -23,8 +23,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Request> displayedRequests = [];
-  String appBarTitle = "Todo";
-  int _selectedIndex = 0;
+  StateRequest? _currentStateRequest;
 
   DatabaseHelper dbHelper = DatabaseHelper();
 
@@ -93,8 +92,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadDatabase() async {
-    // se agregan las solicitudes en la database para crear, ver, editar
-    // y eliminar desde la database.
     await dbHelper.deleteRequest(null);
     final copy = List<Request>.from(requests);
     final List<Request> requestsWithId = [];
@@ -102,12 +99,12 @@ class _HomePageState extends State<HomePage> {
       Request rWithId = await dbHelper.insertRequest(r);
       requestsWithId.add(rWithId);
     }
+
     setState(() {
       requests.clear();
       requests.addAll(requestsWithId);
     });
 
-    appBarTitle = "Todo";
     _setRequests(null);
   }
 
@@ -118,13 +115,12 @@ class _HomePageState extends State<HomePage> {
       requests.add(Request.fromMap(map));
     }
 
-    appBarTitle = "Todo";
-    _setRequests(null);
+    _setRequests(_currentStateRequest);
   }
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(StateRequest? state) {
     setState(() {
-      _selectedIndex = index;
+      _currentStateRequest = state;
     });
   }
 
@@ -145,6 +141,7 @@ class _HomePageState extends State<HomePage> {
       } else {
         displayedRequests.addAll(requests.where((e) => e.state == state));
       }
+      _currentStateRequest = state;
     });
   }
 
@@ -152,7 +149,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(appBarTitle),
+        title: Text(_currentStateRequest?.legibleName ?? "Todo"),
         leading: Builder(
           builder: (context) {
             return IconButton(
@@ -187,22 +184,13 @@ class _HomePageState extends State<HomePage> {
                     maxLines: 2,
                     style: TextStyle(color: Colors.white60, fontSize: 13)
                   ),
-                  trailing: Text(displayedRequests[index].sState ?? "Sin estado"),
+                  trailing: Text(displayedRequests[index].state.legibleName),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => RequestPage(request: displayedRequests[index]))
-                    ).then((map) async {
-                      if (map["delete"]) {
-                        await dbHelper.deleteRequest(displayedRequests[index].id);
-                        _updateRequest();
-                      }
-
-                      final Request? newRequest = map["newRequest"];
-                      if (newRequest != null) {
-                        await dbHelper.updateRequest(displayedRequests[index].id, newRequest);
-                        _updateRequest();
-                      }
+                    ).then((_) {
+                      _updateRequest();
                     });
                   }
                 )
@@ -225,55 +213,50 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: Icon(Icons.list_alt, color: Colors.white),
               title: const Text("Todo"),
-              selected: _selectedIndex == 0,
+              selected: _currentStateRequest == null,
               onTap: () {
-                _onItemTapped(0);
+                _onItemTapped(null);
                 _setRequests(null);
-                appBarTitle = "Todo";
                 Navigator.pop(context);
               },
             ),
             ListTile(
               leading: Icon(Icons.hourglass_empty, color: Colors.white),
               title: const Text("Solicitudes pendientes"),
-              selected: _selectedIndex == 4,
+              selected: _currentStateRequest == StateRequest.pending,
               onTap: () {
-                _onItemTapped(4);
+                _onItemTapped(StateRequest.pending);
                 _setRequests(StateRequest.pending);
-                appBarTitle = "Solicitudes pendientes";
                 Navigator.pop(context);
               },
             ),
             ListTile(
               leading: Icon(Icons.check_circle_outline, color: Colors.white),
               title: const Text("Solicitudes aprobadas"),
-              selected: _selectedIndex == 2,
+              selected: _currentStateRequest == StateRequest.approved,
               onTap: () {
-                _onItemTapped(2);
+                _onItemTapped(StateRequest.approved);
                 _setRequests(StateRequest.approved);
-                appBarTitle = "Solicitudes aprobadas";
                 Navigator.pop(context);
               },
             ),
             ListTile(
               leading: Icon(Icons.cancel_outlined, color: Colors.white),
               title: const Text("Solicitudes negadas"),
-              selected: _selectedIndex == 3,
+              selected: _currentStateRequest == StateRequest.denied,
               onTap: () {
-                _onItemTapped(3);
+                _onItemTapped(StateRequest.denied);
                 _setRequests(StateRequest.denied);
-                appBarTitle = "Solicitudes negadas";
                 Navigator.pop(context);
               },
             ),
             ListTile(
               leading: Icon(Icons.flag, color: Colors.white),
               title: const Text("Solicitudes ejecutadas"),
-              selected: _selectedIndex == 5,
+              selected: _currentStateRequest == StateRequest.executed,
               onTap: () {
-                _onItemTapped(5);
+                _onItemTapped(StateRequest.executed);
                 _setRequests(StateRequest.executed);
-                appBarTitle = "Solicitudes ejecutadas";
                 Navigator.pop(context);
               },
             ),
@@ -283,6 +266,7 @@ class _HomePageState extends State<HomePage> {
               leading: Icon(Icons.account_circle_sharp, color: Colors.white),
               title: const Text('Profile'),
               onTap: () {
+                Navigator.pop(context);
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
               },
             ),
@@ -290,6 +274,7 @@ class _HomePageState extends State<HomePage> {
               leading: Icon(Icons.settings, color: Colors.white),
               title: const Text('Preferencias'),
               onTap: () {
+                Navigator.pop(context);
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingPage()));
               },
             ),
@@ -297,6 +282,7 @@ class _HomePageState extends State<HomePage> {
               leading: Icon(Icons.info_outline, color: Colors.white),
               title: const Text('Acerca'),
               onTap: () {
+                Navigator.pop(context);
                 Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutPage()));
               },
             ),

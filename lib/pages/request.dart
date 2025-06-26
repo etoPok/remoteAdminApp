@@ -4,7 +4,8 @@ import 'package:remote_admin_app/data/services/preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:intl/intl.dart';
 
-import '../data/models/request.dart';
+import 'package:remote_admin_app/data/services/database_helper.dart';
+import 'package:remote_admin_app/data/models/request.dart';
 
 class RequestPage extends StatefulWidget {
   const RequestPage({super.key, required this.request});
@@ -16,8 +17,9 @@ class RequestPage extends StatefulWidget {
 }
 
 class _RequestPageState extends State<RequestPage> {
-  bool save = false;
   late Request newRequest;
+  DatabaseHelper dbHelper = DatabaseHelper();
+  final TextEditingController controllerResponseMessage = TextEditingController();
 
   @override
   void initState() {
@@ -32,6 +34,12 @@ class _RequestPageState extends State<RequestPage> {
       responseMessage: widget.request.responseMessage,
       responseDate: widget.request.responseDate
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    controllerResponseMessage.dispose();
   }
 
   String formatDateWithTime(DateTime? date) {
@@ -61,108 +69,144 @@ class _RequestPageState extends State<RequestPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // return Scaffold(
-    //   appBar: AppBar(),
-    // );
-    final prefs = Provider.of<PreferencesProvider>(context);
+  Future<void> _deleteRequest() async {
+    await dbHelper.deleteRequest(newRequest.id);
+    if (!mounted) return;
+    Navigator.pop(context);
+  }
 
-    void deleteRequest() {
-      Navigator.pop(context, {"delete": true, "newRequest": null});
-    }
-
-    Widget getOptions() {
-      if (newRequest.state != StateRequest.pending) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text("Solicitud procesada", style: TextStyle(color: Colors.white))
-          ],
-        );
-      }
-
+  Widget _getApproveAndRejectOptions() {
+    if (newRequest.state != StateRequest.pending) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          TextButton.icon(
-            onPressed: () {
-              setState(() {
-                newRequest = newRequest.copyWith(
-                  state: StateRequest.approved,
-                  responseDate: tz.TZDateTime.now(tz.local)
-                );
-                save = true;
-              });
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: Color(0xFF2b2b2b)
-            ),
-            // child: const Text("Aprobar")
-            label: const Text("Aprobar")
-          ),
-
-          SizedBox(width: 16),
-          TextButton.icon(
-            onPressed: () {
-              setState(() {
-                newRequest = newRequest.copyWith(
-                  state: StateRequest.denied,
-                  responseDate: tz.TZDateTime.now(tz.local)
-                );
-                save = true;
-              });
-            },
-            style: TextButton.styleFrom(
-              backgroundColor: Color(0xFF2b2b2b)
-            ),
-            label: const Text("Negar"),
-          )
-        ]
+          const Text("Solicitud procesada", style: TextStyle(color: Colors.white))
+        ],
       );
     }
 
-    Widget getResponseOption() {
-      if (newRequest.state != StateRequest.pending) {
-        return ListTile(
-          title: const Text("Respuesta"),
-          subtitle: Text(newRequest.responseMessage ?? "Sin respuesta")
-        );
-      }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        TextButton.icon(
+          onPressed: () async {
+            bool confirm = false;
+            showDialog(
+              context: context,
+              builder: (BuildContext dialogContext) {
+                return AlertDialog(
+                  title: const Text("¿Aprobar solicitud?"),
+                  content: const Text("Al aprobar la solicitud se preparará en el sistema remoto la tarea con privilegios y el usuario podrá ejecutarla"),
+                  actions: [
+                    TextButton(
+                      onPressed: () { confirm = false; Navigator.of(dialogContext).pop(); },
+                      child: const Text("Cancelar")
+                    ),
+                    TextButton(
+                      onPressed: () { confirm = true; Navigator.of(dialogContext).pop(); },
+                      child: const Text("Aprobar")
+                    )
+                  ],
+                );
+              }
+            ).then((_) async {
+              if (!confirm) return;
 
+              newRequest = newRequest.copyWith(
+                state: StateRequest.approved,
+                responseDate: tz.TZDateTime.now(tz.local),
+                responseMessage: controllerResponseMessage.text
+              );
+
+              await dbHelper.updateRequest(newRequest.id, newRequest);
+              setState(() {});
+            });
+
+          },
+          style: TextButton.styleFrom(
+            backgroundColor: Color(0xFF2b2b2b)
+          ),
+          label: const Text("Aprobar")
+        ),
+
+        SizedBox(width: 16),
+        TextButton.icon(
+          onPressed: () async {
+            bool confirm = false;
+            showDialog(
+              context: context,
+              builder: (BuildContext dialogContext) {
+                return AlertDialog(
+                  title: const Text("Rechazar solicitud?"),
+                  content: const Text("Al negar la solicitud el usuario será notificado y la tarea no tendrá efecto en el sistema"),
+                  actions: [
+                    TextButton(
+                      onPressed: () { confirm = false; Navigator.of(dialogContext).pop(); },
+                      child: const Text("Cancelar")
+                    ),
+                    TextButton(
+                      onPressed: () { confirm = true; Navigator.of(dialogContext).pop(); },
+                      child: const Text("Denegar")
+                    )
+                  ],
+                );
+              }
+            ).then((_) async {
+              if (!confirm) return;
+
+              newRequest = newRequest.copyWith(
+                state: StateRequest.denied,
+                responseDate: tz.TZDateTime.now(tz.local),
+                responseMessage: controllerResponseMessage.text
+              );
+
+              await dbHelper.updateRequest(newRequest.id, newRequest);
+              setState(() {});
+            });
+
+          },
+          style: TextButton.styleFrom(
+            backgroundColor: Color(0xFF2b2b2b)
+          ),
+          label: const Text("Negar"),
+        )
+      ]
+    );
+  }
+
+  Widget _getAnswerOption() {
+    if (newRequest.state != StateRequest.pending) {
       return ListTile(
         title: const Text("Respuesta"),
-        subtitle: TextField(
-          onSubmitted: (value) {
-            newRequest = newRequest.copyWith(responseMessage: value);
-          }
-        )
+        subtitle: Text(newRequest.responseMessage ?? "Sin respuesta")
       );
     }
 
-    Widget getResponseDate() {
-      if (newRequest.state == StateRequest.pending) {
-        return SizedBox.shrink();
-      }
+    return ListTile(
+      title: const Text("Respuesta"),
+      subtitle: TextField(
+        controller: controllerResponseMessage,
+      )
+    );
+  }
 
-      return ListTile(
-        title: const Text("Fecha de respuesta"),
-        subtitle: Text(formatDateWithTime(newRequest.responseDate))
-      );
+  Widget _getAnswerDate() {
+    if (newRequest.state == StateRequest.pending) {
+      return SizedBox.shrink();
     }
 
+    return ListTile(
+      title: const Text("Fecha de respuesta"),
+      subtitle: Text(formatDateWithTime(newRequest.responseDate))
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prefs = Provider.of<PreferencesProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Solicitud"),
-        leading: IconButton(
-          onPressed: () {
-            if (!save)
-              {Navigator.pop(context, {"delete": false, "newRequest": null});}
-            else
-              {Navigator.pop(context, {"delete": false, "newRequest": newRequest});}
-          },
-          icon: Icon(Icons.arrow_back)
-        )
       ),
 
       body: Padding(
@@ -186,7 +230,7 @@ class _RequestPageState extends State<RequestPage> {
                             title: Text(newRequest.userName),
                             trailing: Text(_getDayName(newRequest.date.weekday)),
                             subtitle: Text(
-                              newRequest.sState ?? "Sin estado",
+                              newRequest.state.legibleName,
                               style: TextStyle(fontSize: 13)
                             )
                           ),
@@ -220,18 +264,18 @@ class _RequestPageState extends State<RequestPage> {
                       children: [
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 4),
-                          child: getResponseOption()
+                          child: _getAnswerOption()
                         ),
                         Padding(
                           padding: EdgeInsets.symmetric(vertical: 4),
-                          child: getResponseDate()
+                          child: _getAnswerDate()
                         )
                       ],
                     )
                   ),
 
                   SizedBox(height: 8),
-                  getOptions()
+                  _getApproveAndRejectOptions()
                 ]
               )
             ),
@@ -262,36 +306,34 @@ class _RequestPageState extends State<RequestPage> {
                         child: IconButton(
                           icon: Icon(Icons.delete_outline),
                           onPressed: () {
-                            if (prefs.confirmBeforeDelete) {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext dialogContext) {
-                                  return AlertDialog(
-                                    title: Text("¿Eliminar solicitud?"),
-                                      content: Text(
-                                        "Eliminar una solicitud pendiente se negará inmediatamente. "
-                                        "Obtendrá actualizaciones de solicitudes que haya procesado aunque se eliminen.",
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          child: Text("Cancelar"),
-                                          onPressed: () {
-                                            Navigator.of(dialogContext).pop();
-                                          },
-                                        ),
-                                        TextButton(
-                                          child: Text("Eliminar"),
-                                          onPressed: () {
-                                            Navigator.of(dialogContext).pop();
-                                            deleteRequest();
-                                          },
-                                        ),
-                                      ]
-                                  );
-                              });
-                            } else {
-                              deleteRequest();
-                            }
+                            if (!prefs.confirmBeforeDelete) { _deleteRequest(); return; }
+
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext dialogContext) {
+                                return AlertDialog(
+                                  title: Text("¿Eliminar solicitud?"),
+                                  content: Text(
+                                    "Eliminar una solicitud pendiente se negará inmediatamente. "
+                                    "Obtendrá actualizaciones de solicitudes que haya procesado aunque se eliminen.",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      child: Text("Cancelar"),
+                                      onPressed: () {
+                                        Navigator.of(dialogContext).pop();
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text("Eliminar"),
+                                      onPressed: () async {
+                                        Navigator.of(dialogContext).pop();
+                                        _deleteRequest();
+                                      },
+                                    ),
+                                  ]
+                                );
+                            });
                           },
                         ),
                       )
