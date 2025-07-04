@@ -1,16 +1,16 @@
 enum StateRequest {
-  executed("Ejecutado"),
-  approved("Aprobado"),
+  executed("Ejecutada"),
+  approved("Aprobada"),
   pending("Pendiente"),
-  denied("Denegado");
+  denied("Denegada");
   final String legibleName;
   const StateRequest(this.legibleName);
   static StateRequest? stringToStateRequest(String state) {
     switch (state) {
-      case "Ejecutado": return StateRequest.executed;
-      case "Aprobado": return StateRequest.approved;
+      case "Ejecutada": return StateRequest.executed;
+      case "Aprobada": return StateRequest.approved;
       case "Pendiente": return StateRequest.pending;
-      case "Denegado": return StateRequest.denied;
+      case "Denegada": return StateRequest.denied;
     }
     return null;
   }

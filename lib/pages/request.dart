@@ -24,16 +24,7 @@ class _RequestPageState extends State<RequestPage> {
   @override
   void initState() {
     super.initState();
-    newRequest = Request(
-      id: widget.request.id,
-      userName: widget.request.userName,
-      message: widget.request.message,
-      action: widget.request.action,
-      date: widget.request.date,
-      state: widget.request.state,
-      responseMessage: widget.request.responseMessage,
-      responseDate: widget.request.responseDate
-    );
+    newRequest = widget.request.copyWith();
   }
 
   @override
@@ -138,7 +129,7 @@ class _RequestPageState extends State<RequestPage> {
               builder: (BuildContext dialogContext) {
                 return AlertDialog(
                   title: const Text("Rechazar solicitud?"),
-                  content: const Text("Al negar la solicitud el usuario será notificado y la tarea no tendrá efecto en el sistema"),
+                  content: const Text("Al denegar la solicitud el usuario será notificado y la tarea no tendrá efecto en el sistema remoto"),
                   actions: [
                     TextButton(
                       onPressed: () { confirm = false; Navigator.of(dialogContext).pop(); },
@@ -168,7 +159,7 @@ class _RequestPageState extends State<RequestPage> {
           style: TextButton.styleFrom(
             backgroundColor: Color(0xFF2b2b2b)
           ),
-          label: const Text("Negar"),
+          label: const Text("Denegar"),
         )
       ]
     );

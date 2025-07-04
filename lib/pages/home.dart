@@ -94,16 +94,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadDatabase() async {
     await dbHelper.deleteRequest(null);
     final copy = List<Request>.from(requests);
-    final List<Request> requestsWithId = [];
-    for (var r in copy) {
-      Request rWithId = await dbHelper.insertRequest(r);
-      requestsWithId.add(rWithId);
-    }
-
-    setState(() {
-      requests.clear();
-      requests.addAll(requestsWithId);
-    });
+    requests.clear();
+    for (var r in copy) { requests.add(await dbHelper.insertRequest(r)); }
 
     _setRequests(null);
   }
@@ -134,8 +126,8 @@ class _HomePageState extends State<HomePage> {
   /// Define por estado las solicitudes a mostrar. Si no especifica un estado
   /// mostrara todas las solicitudes.
   void _setRequests(StateRequest? state) {
+    displayedRequests.clear();
     setState(() {
-      displayedRequests.clear();
       if (state == null) {
         displayedRequests.addAll(requests);
       } else {
@@ -242,7 +234,7 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: Icon(Icons.cancel_outlined, color: Colors.white),
-              title: const Text("Solicitudes negadas"),
+              title: const Text("Solicitudes denegadas"),
               selected: _currentStateRequest == StateRequest.denied,
               onTap: () {
                 _onItemTapped(StateRequest.denied);
